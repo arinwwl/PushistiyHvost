@@ -20,6 +20,7 @@ import com.example.pushistiyhvost.presentation.profile.ProfileScreen
 import com.example.pushistiyhvost.ui.components.MainBottomBar
 import com.example.pushistiyhvost.presentation.pets.AddEditPetScreen
 import com.example.pushistiyhvost.presentation.pets.PetsScreen
+import com.example.pushistiyhvost.presentation.bonus.BonusScreen
 
 @Composable
 fun MainContainerScreen(
@@ -107,6 +108,9 @@ fun MainContainerScreen(
                     onLoginRequiredClick = onLoginRequired,
                     onPetsClick = {
                         bottomNavController.navigate(Screen.Pets.route)
+                    },
+                    onBonusClick = {
+                        bottomNavController.navigate(Screen.Bonus.route)
                     }
                 )
             }
@@ -125,6 +129,10 @@ fun MainContainerScreen(
                         bottomNavController.popBackStack()
                     }
                 )
+            }
+
+            composable(Screen.Bonus.route) {
+                BonusScreen()
             }
         }
     }

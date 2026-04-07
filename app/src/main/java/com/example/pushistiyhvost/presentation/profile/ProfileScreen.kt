@@ -39,7 +39,8 @@ import androidx.compose.foundation.clickable
 fun ProfileScreen(
     onLogoutClick: () -> Unit,
     onLoginRequiredClick: () -> Unit,
-    onPetsClick: () -> Unit
+    onPetsClick: () -> Unit,
+    onBonusClick: () -> Unit
 ) {
     val currentUser = FirebaseAuth.getInstance().currentUser
     val isGuest = currentUser == null
@@ -123,6 +124,12 @@ fun ProfileScreen(
 
                     if (!isGuest) {
                         Text("Количество заказов: ${orders.size}")
+                        Text(
+                            text = "Бонусы",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clickable { onBonusClick() }
+                        )
                     }
 
                     if (!isGuest) {
