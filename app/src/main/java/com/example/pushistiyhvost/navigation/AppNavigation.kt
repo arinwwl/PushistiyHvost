@@ -14,6 +14,7 @@ import com.example.pushistiyhvost.presentation.auth.LoginScreen
 import com.example.pushistiyhvost.presentation.auth.RegisterScreen
 import com.example.pushistiyhvost.presentation.auth.WelcomeScreen
 import com.google.firebase.auth.FirebaseAuth
+import com.example.pushistiyhvost.domain.usecase.ResetPasswordUseCase
 
 @Composable
 fun AppNavigation() {
@@ -23,9 +24,13 @@ fun AppNavigation() {
     val repository = AuthRepositoryImpl(firebaseAuth)
     val registerUseCase = RegisterUseCase(repository)
     val loginUseCase = LoginUseCase(repository)
-
+    val resetPasswordUseCase = ResetPasswordUseCase(repository)
     val authViewModel: AuthViewModel = viewModel(
-        factory = AuthViewModelFactory(registerUseCase, loginUseCase)
+        factory = AuthViewModelFactory(
+            registerUseCase,
+            loginUseCase,
+            resetPasswordUseCase
+        )
     )
 
     NavHost(

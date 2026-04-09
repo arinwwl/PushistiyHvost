@@ -34,6 +34,7 @@ import com.example.pushistiyhvost.data.repository.ProductRepositoryImpl
 import com.example.pushistiyhvost.domain.usecase.GetProductByIdUseCase
 import com.example.pushistiyhvost.presentation.cart.CartManager
 import com.google.firebase.firestore.FirebaseFirestore
+import com.example.pushistiyhvost.presentation.catalog.Base64Image
 
 @Composable
 fun ProductDetailsScreen(
@@ -83,8 +84,8 @@ fun ProductDetailsScreen(
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Image(
-                painter = rememberAsyncImagePainter(currentProduct.imageUrl),
+            Base64Image(
+                base64 = currentProduct.imageBase64,
                 contentDescription = currentProduct.name,
                 modifier = Modifier
                     .fillMaxWidth()

@@ -7,7 +7,7 @@ fun ProductDto.toProduct(): Product {
         id = id,
         name = name,
         price = price,
-        imageUrl = imageUrl,
+        imageBase64 = imageBase64,
         rating = rating,
         description = description,
         category = category,

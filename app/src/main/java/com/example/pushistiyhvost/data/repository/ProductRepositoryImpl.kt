@@ -1,7 +1,6 @@
 package com.example.pushistiyhvost.data.repository
 
-import com.example.pushistiyhvost.data.model.ProductDto
-import com.example.pushistiyhvost.data.model.toProduct
+import android.util.Log
 import com.example.pushistiyhvost.domain.repository.ProductRepository
 import com.example.pushistiyhvost.presentation.home.model.Product
 import com.google.firebase.firestore.FirebaseFirestore
@@ -13,48 +12,58 @@ class ProductRepositoryImpl(
 
     override suspend fun getProducts(): List<Product> {
         return try {
-            val snapshot = firestore.collection("products").get().await()
+            val snapshot = firestore.collection("product").get().await()
+
             snapshot.documents.mapNotNull { document ->
-                document.toObject(ProductDto::class.java)
-                    ?.copy(id = document.id)
-                    ?.toProduct()
+                try {
+                    Product(
+                        id = document.id,
+                        name = document.getString("name") ?: "",
+                        price = (document.getLong("price") ?: 0L).toInt(),
+                        imageBase64 = document.getString("imageBase64") ?: "",
+                        rating = document.getDouble("rating") ?: 0.0,
+                        description = document.getString("description") ?: "",
+                        category = document.getString("category") ?: "",
+                        characteristics = (document.get("characteristics") as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
+                        reviews = (document.get("reviews") as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
+                    )
+                } catch (e: Exception) {
+                    Log.e("PRODUCT_REPOSITORY", "Error parsing document ${document.id}: ${e.message}", e)
+                    null
+                }
             }
         } catch (e: Exception) {
+            Log.e("PRODUCT_REPOSITORY", "Error loading products: ${e.message}", e)
             emptyList()
         }
     }
 
     override suspend fun getProductsByCategory(category: String): List<Product> {
-        return try {
-            val snapshot = firestore.collection("products").get().await()
-
-            snapshot.documents.mapNotNull { document ->
-                val dto = document.toObject(ProductDto::class.java) ?: return@mapNotNull null
-
-                dto.copy(id = document.id)
-            }
-                .filter {
-                    it.category?.trim()?.lowercase() ==
-                            category.trim().lowercase()
-                }
-                .map { it.toProduct() }
-
-        } catch (e: Exception) {
-            emptyList()
+        return getProducts().filter {
+            it.category.trim().lowercase() == category.trim().lowercase()
         }
     }
 
     override suspend fun getProductById(productId: String): Product? {
         return try {
-            val document = firestore.collection("products")
+            val document = firestore.collection("product")
                 .document(productId)
                 .get()
                 .await()
 
-            document.toObject(ProductDto::class.java)
-                ?.copy(id = document.id)
-                ?.toProduct()
+            Product(
+                id = document.id,
+                name = document.getString("name") ?: "",
+                price = (document.getLong("price") ?: 0L).toInt(),
+                imageBase64 = document.getString("imageBase64") ?: "",
+                rating = document.getDouble("rating") ?: 0.0,
+                description = document.getString("description") ?: "",
+                category = document.getString("category") ?: "",
+                characteristics = (document.get("characteristics") as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
+                reviews = (document.get("reviews") as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
+            )
         } catch (e: Exception) {
+            Log.e("PRODUCT_REPOSITORY", "Error loading product by id: ${e.message}", e)
             null
         }
     }

@@ -40,4 +40,16 @@ class AuthRepositoryImpl(
     override fun isUserLoggedIn(): Boolean {
         return firebaseAuth.currentUser != null
     }
+
+    override suspend fun resetPassword(email: String): AuthResult {
+        return try {
+            firebaseAuth.sendPasswordResetEmail(email.trim()).await()
+            AuthResult(isSuccess = true)
+        } catch (e: Exception) {
+            AuthResult(
+                isSuccess = false,
+                errorMessage = e.message ?: "Ошибка восстановления"
+            )
+        }
+    }
 }

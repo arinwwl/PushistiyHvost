@@ -21,6 +21,9 @@ import com.example.pushistiyhvost.ui.components.MainBottomBar
 import com.example.pushistiyhvost.presentation.pets.AddEditPetScreen
 import com.example.pushistiyhvost.presentation.pets.PetsScreen
 import com.example.pushistiyhvost.presentation.bonus.BonusScreen
+import com.example.pushistiyhvost.presentation.promotions.PromotionsScreen
+import com.example.pushistiyhvost.presentation.articles.ArticleDetailsScreen
+import com.example.pushistiyhvost.presentation.articles.ArticlesScreen
 
 @Composable
 fun MainContainerScreen(
@@ -111,6 +114,12 @@ fun MainContainerScreen(
                     },
                     onBonusClick = {
                         bottomNavController.navigate(Screen.Bonus.route)
+                    },
+                    onPromotionsClick = {
+                        bottomNavController.navigate(Screen.Promotions.route)
+                    },
+                    onArticlesClick = {
+                        bottomNavController.navigate(Screen.Articles.route)
                     }
                 )
             }
@@ -133,6 +142,28 @@ fun MainContainerScreen(
 
             composable(Screen.Bonus.route) {
                 BonusScreen()
+            }
+
+            composable(Screen.Promotions.route) {
+                PromotionsScreen()
+            }
+
+            composable(Screen.Articles.route) {
+                ArticlesScreen(
+                    onArticleClick = { articleId ->
+                        bottomNavController.navigate("${Screen.ArticleDetails.route}/$articleId")
+                    }
+                )
+            }
+
+            composable(
+                route = "${Screen.ArticleDetails.route}/{articleId}",
+                arguments = listOf(
+                    navArgument("articleId") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val articleId = backStackEntry.arguments?.getString("articleId") ?: ""
+                ArticleDetailsScreen(articleId = articleId)
             }
         }
     }

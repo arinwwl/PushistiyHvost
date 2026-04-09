@@ -72,6 +72,8 @@ fun CatalogProductsScreen(
                 color = Color.Gray
             )
 
+
+
             LazyVerticalGrid(
                 columns = GridCells.Fixed(2),
                 contentPadding = PaddingValues(top = 16.dp, bottom = 16.dp),
@@ -93,5 +95,7 @@ private fun normalizeCategory(value: String): String {
     return value
         .trim()
         .replace("\"", "")
+        .replace("«", "")
+        .replace("»", "")
         .lowercase()
 }

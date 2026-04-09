@@ -45,6 +45,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pushistiyhvost.R
 import com.example.pushistiyhvost.ui.components.PrimaryAuthButton
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 
 @Composable
 fun LoginScreen(
@@ -59,7 +63,7 @@ fun LoginScreen(
     var password by remember { mutableStateOf("") }
 
     val state by viewModel.authState.collectAsState()
-
+    var passwordVisible by remember { mutableStateOf(false) }
     LaunchedEffect(state) {
         if (state is AuthUiState.Success) {
             onSuccess()
@@ -141,7 +145,24 @@ fun LoginScreen(
                     label = { Text("Пароль") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    singleLine = true
+                    singleLine = true,
+                    visualTransformation = if (passwordVisible)
+                        VisualTransformation.None
+                    else
+                        PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = {
+                            passwordVisible = !passwordVisible
+                        }) {
+                            Icon(
+                                imageVector = if (passwordVisible)
+                                    Icons.Default.Visibility
+                                else
+                                    Icons.Default.VisibilityOff,
+                                contentDescription = null
+                            )
+                        }
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(6.dp))
@@ -150,7 +171,24 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.End
                 ) {
-                    TextButton(onClick = { }) {
+                    TextButton(
+                        onClick = {
+                            if (email.isNotBlank()) {
+                                viewModel.resetPassword(email)
+                                Toast.makeText(
+                                    context,
+                                    "Письмо для восстановления отправлено",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            } else {
+                                Toast.makeText(
+                                    context,
+                                    "Введите email",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        }
+                    ) {
                         Text("Забыли пароль?")
                     }
                 }

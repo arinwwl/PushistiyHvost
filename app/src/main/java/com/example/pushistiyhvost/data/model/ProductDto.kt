@@ -4,7 +4,7 @@ data class ProductDto(
     val id: String = "",
     val name: String = "",
     val price: Int = 0,
-    val imageUrl: String = "",
+    val imageBase64: String = "",
     val rating: Double = 0.0,
     val description: String = "",
     val category: String = "",

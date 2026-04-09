@@ -19,4 +19,10 @@ sealed class Screen(val route: String) {
     data object Pets : Screen("pets")
     data object AddEditPet : Screen("add_edit_pet")
     data object Bonus : Screen("bonus")
+
+    data object Promotions : Screen("promotions")
+
+    data object Articles : Screen("articles")
+
+    data object ArticleDetails : Screen("article_details")
 }

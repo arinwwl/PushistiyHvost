@@ -23,6 +23,7 @@ import com.example.pushistiyhvost.data.repository.AuthRepositoryImpl
 import com.example.pushistiyhvost.domain.usecase.LoginUseCase
 import com.example.pushistiyhvost.domain.usecase.RegisterUseCase
 import com.google.firebase.auth.FirebaseAuth
+import com.example.pushistiyhvost.domain.usecase.ResetPasswordUseCase
 
 @Composable
 fun AuthScreen() {
@@ -30,9 +31,13 @@ fun AuthScreen() {
     val repository = AuthRepositoryImpl(firebaseAuth)
     val registerUseCase = RegisterUseCase(repository)
     val loginUseCase = LoginUseCase(repository)
-
+    val resetPasswordUseCase = ResetPasswordUseCase(repository)
     val viewModel: AuthViewModel = viewModel(
-        factory = AuthViewModelFactory(registerUseCase, loginUseCase)
+        factory = AuthViewModelFactory(
+            registerUseCase,
+            loginUseCase,
+            resetPasswordUseCase
+        )
     )
 
     var email by remember { mutableStateOf("") }

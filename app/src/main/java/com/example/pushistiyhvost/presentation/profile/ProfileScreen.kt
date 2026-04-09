@@ -40,7 +40,9 @@ fun ProfileScreen(
     onLogoutClick: () -> Unit,
     onLoginRequiredClick: () -> Unit,
     onPetsClick: () -> Unit,
-    onBonusClick: () -> Unit
+    onBonusClick: () -> Unit,
+    onPromotionsClick: () -> Unit,
+    onArticlesClick: () -> Unit
 ) {
     val currentUser = FirebaseAuth.getInstance().currentUser
     val isGuest = currentUser == null
@@ -129,6 +131,18 @@ fun ProfileScreen(
                             color = MaterialTheme.colorScheme.primary,
                             fontWeight = FontWeight.SemiBold,
                             modifier = Modifier.clickable { onBonusClick() }
+                        )
+                        Text(
+                            text = "Акции",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clickable { onPromotionsClick() }
+                        )
+                        Text(
+                            text = "Статьи",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clickable { onArticlesClick() }
                         )
                     }
 

@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberAsyncImagePainter
 import com.example.pushistiyhvost.presentation.cart.CartManager
 import com.example.pushistiyhvost.presentation.home.model.Product
+import com.example.pushistiyhvost.presentation.catalog.Base64Image
 
 @Composable
 fun ProductCard(
@@ -39,12 +40,12 @@ fun ProductCard(
             )
             .padding(12.dp)
     ) {
-        Image(
-            painter = rememberAsyncImagePainter(product.imageUrl),
+        Base64Image(
+            base64 = product.imageBase64,
             contentDescription = product.name,
             modifier = Modifier
                 .fillMaxWidth()
-                .height(120.dp)
+                .height(140.dp)
                 .clip(RoundedCornerShape(16.dp)),
             contentScale = ContentScale.Crop
         )

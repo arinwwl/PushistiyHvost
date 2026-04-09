@@ -40,7 +40,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pushistiyhvost.R
 import com.example.pushistiyhvost.ui.components.PrimaryAuthButton
-
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 @Composable
 fun RegisterScreen(
     viewModel: AuthViewModel,
@@ -51,7 +54,7 @@ fun RegisterScreen(
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-
+    var passwordVisible by remember { mutableStateOf(false) }
     val state by viewModel.authState.collectAsState()
 
     LaunchedEffect(state) {
