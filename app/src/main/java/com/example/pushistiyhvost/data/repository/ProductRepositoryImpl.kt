@@ -25,7 +25,8 @@ class ProductRepositoryImpl(
                         description = document.getString("description") ?: "",
                         category = document.getString("category") ?: "",
                         characteristics = (document.get("characteristics") as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
-                        reviews = (document.get("reviews") as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
+                        reviews = (document.get("reviews") as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
+                        inStock = document.getBoolean("inStock") ?: true
                     )
                 } catch (e: Exception) {
                     Log.e("PRODUCT_REPOSITORY", "Error parsing document ${document.id}: ${e.message}", e)
@@ -51,6 +52,8 @@ class ProductRepositoryImpl(
                 .get()
                 .await()
 
+            if (!document.exists()) return null
+
             Product(
                 id = document.id,
                 name = document.getString("name") ?: "",
@@ -60,11 +63,70 @@ class ProductRepositoryImpl(
                 description = document.getString("description") ?: "",
                 category = document.getString("category") ?: "",
                 characteristics = (document.get("characteristics") as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
-                reviews = (document.get("reviews") as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
+                reviews = (document.get("reviews") as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
+                inStock = document.getBoolean("inStock") ?: true
             )
         } catch (e: Exception) {
             Log.e("PRODUCT_REPOSITORY", "Error loading product by id: ${e.message}", e)
             null
+        }
+    }
+
+    override suspend fun addProduct(product: Product): Result<Unit> {
+        return try {
+            val documentRef = if (product.id.isBlank()) {
+                firestore.collection("product").document()
+            } else {
+                firestore.collection("product").document(product.id)
+            }
+
+            val productMap = hashMapOf(
+                "name" to product.name,
+                "price" to product.price,
+                "imageBase64" to product.imageBase64,
+                "rating" to product.rating,
+                "description" to product.description,
+                "category" to product.category,
+                "characteristics" to product.characteristics,
+                "reviews" to product.reviews,
+                "inStock" to product.inStock
+            )
+
+            documentRef.set(productMap).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("PRODUCT_REPOSITORY", "Error adding product: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateProduct(product: Product): Result<Unit> {
+        return try {
+            if (product.id.isBlank()) {
+                return Result.failure(Exception("Пустой id товара"))
+            }
+
+            val productMap = hashMapOf(
+                "name" to product.name,
+                "price" to product.price,
+                "imageBase64" to product.imageBase64,
+                "rating" to product.rating,
+                "description" to product.description,
+                "category" to product.category,
+                "characteristics" to product.characteristics,
+                "reviews" to product.reviews,
+                "inStock" to product.inStock
+            )
+
+            firestore.collection("product")
+                .document(product.id)
+                .set(productMap)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Log.e("PRODUCT_REPOSITORY", "Error updating product: ${e.message}", e)
+            Result.failure(e)
         }
     }
 }

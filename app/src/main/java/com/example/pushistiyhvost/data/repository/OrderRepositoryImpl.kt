@@ -68,4 +68,55 @@ class OrderRepositoryImpl(
             emptyList()
         }
     }
+
+    override suspend fun getAllOrders(): List<Order> {
+        return try {
+            val snapshot = firestore.collection("orders")
+                .get()
+                .await()
+
+            snapshot.documents.mapNotNull { document ->
+                document.toObject(OrderDto::class.java)
+                    ?.copy(id = document.id)
+                    ?.toOrder()
+            }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    override suspend fun getOrderById(orderId: String): Order? {
+        return try {
+            val document = firestore.collection("orders")
+                .document(orderId)
+                .get()
+                .await()
+
+            if (!document.exists()) {
+                null
+            } else {
+                document.toObject(OrderDto::class.java)
+                    ?.copy(id = document.id)
+                    ?.toOrder()
+            }
+        } catch (e: Exception) {
+            null
+        }
+    }
+
+    override suspend fun updateOrderStatus(
+        orderId: String,
+        status: String
+    ): Result<Unit> {
+        return try {
+            firestore.collection("orders")
+                .document(orderId)
+                .update("status", status)
+                .await()
+
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

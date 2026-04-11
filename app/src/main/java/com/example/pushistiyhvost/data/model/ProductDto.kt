@@ -9,5 +9,6 @@ data class ProductDto(
     val description: String = "",
     val category: String = "",
     val characteristics: List<String> = emptyList(),
-    val reviews: List<String> = emptyList()
+    val reviews: List<String> = emptyList(),
+    val inStock: Boolean = true
 )

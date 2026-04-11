@@ -16,4 +16,8 @@ interface OrderRepository {
     )
 
     suspend fun getOrders(userId: String): List<Order>
+
+    suspend fun getAllOrders(): List<Order>
+    suspend fun getOrderById(orderId: String): Order?
+    suspend fun updateOrderStatus(orderId: String, status: String): Result<Unit>
 }

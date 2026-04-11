@@ -43,10 +43,21 @@ fun CheckoutScreen(
     var currentStep by remember { mutableIntStateOf(1) }
 
     var deliveryType by remember { mutableStateOf("Доставка") }
-    var address by remember { mutableStateOf("") }
+
+    var street by remember { mutableStateOf("") }
+    var house by remember { mutableStateOf("") }
+    var apartment by remember { mutableStateOf("") }
+
+    var pickupAddress by remember { mutableStateOf("") }
+
     var selectedDate by remember { mutableStateOf("Сегодня") }
     var selectedTime by remember { mutableStateOf("10:00 – 12:00") }
     var paymentType by remember { mutableStateOf("Карта") }
+
+    val pickupAddresses = listOf(
+        "г. Калининград, ул. Киевская, 55",
+        "г. Калининград, ул. Театральная, 67"
+    )
 
     val firestore = FirebaseFirestore.getInstance()
     val repository = OrderRepositoryImpl(firestore)
@@ -90,7 +101,10 @@ fun CheckoutScreen(
                     SelectCard(
                         text = "Доставка",
                         selected = deliveryType == "Доставка",
-                        onClick = { deliveryType = "Доставка" }
+                        onClick = {
+                            deliveryType = "Доставка"
+                            pickupAddress = ""
+                        }
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
@@ -98,47 +112,94 @@ fun CheckoutScreen(
                     SelectCard(
                         text = "Самовывоз",
                         selected = deliveryType == "Самовывоз",
-                        onClick = { deliveryType = "Самовывоз" }
+                        onClick = {
+                            deliveryType = "Самовывоз"
+                            if (pickupAddress.isBlank()) {
+                                pickupAddress = pickupAddresses.first()
+                            }
+                        }
                     )
                 }
 
                 2 -> {
                     Text(
-                        text = "Адрес",
+                        text = if (deliveryType == "Самовывоз") "Адрес самовывоза" else "Адрес доставки",
                         fontWeight = FontWeight.Bold,
                         fontSize = 18.sp
                     )
 
                     Spacer(modifier = Modifier.height(12.dp))
 
-                    Surface(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(140.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        color = Color(0xFFE8E5F2)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxSize(),
-                            horizontalArrangement = Arrangement.Center
+                    if (deliveryType == "Доставка") {
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(140.dp),
+                            shape = RoundedCornerShape(20.dp),
+                            color = Color(0xFFE8E5F2)
                         ) {
-                            Text(
-                                text = "Здесь будет карта",
-                                modifier = Modifier.padding(top = 56.dp),
-                                color = Color(0xFF6C6880)
+                            Row(
+                                modifier = Modifier.fillMaxSize(),
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = "Здесь будет карта",
+                                    modifier = Modifier.padding(top = 56.dp),
+                                    color = Color(0xFF6C6880)
+                                )
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        OutlinedTextField(
+                            value = street,
+                            onValueChange = { street = it },
+                            label = { Text("Улица") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            singleLine = true
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        OutlinedTextField(
+                            value = house,
+                            onValueChange = { house = it },
+                            label = { Text("Дом") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            singleLine = true
+                        )
+
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        OutlinedTextField(
+                            value = apartment,
+                            onValueChange = { apartment = it },
+                            label = { Text("Квартира") },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            singleLine = true
+                        )
+                    } else {
+                        Text(
+                            text = "Выберите магазин для самовывоза",
+                            color = Color(0xFF6C6880)
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+
+                        pickupAddresses.forEach { address ->
+                            SelectCard(
+                                text = address,
+                                selected = pickupAddress == address,
+                                onClick = { pickupAddress = address }
                             )
+
+                            Spacer(modifier = Modifier.height(10.dp))
                         }
                     }
-
-                    Spacer(modifier = Modifier.height(12.dp))
-
-                    OutlinedTextField(
-                        value = address,
-                        onValueChange = { address = it },
-                        label = { Text("Введите адрес") },
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp)
-                    )
                 }
 
                 3 -> {
@@ -239,13 +300,29 @@ fun CheckoutScreen(
                     } else {
                         val userId = FirebaseAuth.getInstance().currentUser?.uid ?: return@Button
 
+                        val finalAddress = if (deliveryType == "Самовывоз") {
+                            pickupAddress
+                        } else {
+                            buildString {
+                                if (street.isNotBlank()) append("ул. ${street.trim()}")
+                                if (house.isNotBlank()) {
+                                    if (isNotBlank()) append(", ")
+                                    append("д. ${house.trim()}")
+                                }
+                                if (apartment.isNotBlank()) {
+                                    if (isNotBlank()) append(", ")
+                                    append("кв. ${apartment.trim()}")
+                                }
+                            }
+                        }
+
                         CoroutineScope(Dispatchers.IO).launch {
                             createOrderUseCase(
                                 userId = userId,
                                 items = CartManager.cartItems.toList(),
                                 totalPrice = CartManager.getTotalPrice(),
                                 deliveryType = deliveryType,
-                                address = address,
+                                address = finalAddress,
                                 date = selectedDate,
                                 time = selectedTime,
                                 paymentType = paymentType

@@ -46,6 +46,12 @@ fun MainContainerScreen(
                 HomeScreen(
                     onProductClick = { productId ->
                         bottomNavController.navigate("${Screen.ProductDetails.route}/$productId")
+                    },
+                    onArticleClick = { articleId ->
+                        bottomNavController.navigate("${Screen.ArticleDetails.route}/$articleId")
+                    },
+                    onCatalogClick = {
+                        bottomNavController.navigate(Screen.Catalog.route)
                     }
                 )
             }

@@ -18,6 +18,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -41,19 +43,18 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pushistiyhvost.R
 import com.example.pushistiyhvost.ui.components.PrimaryAuthButton
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
 
 @Composable
 fun LoginScreen(
     viewModel: AuthViewModel,
     onSuccess: () -> Unit,
+    onAdminSuccess: () -> Unit,
     onBackClick: () -> Unit,
     onRegisterClick: () -> Unit
 ) {
@@ -61,13 +62,21 @@ fun LoginScreen(
 
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var passwordVisible by remember { mutableStateOf(false) }
 
     val state by viewModel.authState.collectAsState()
-    var passwordVisible by remember { mutableStateOf(false) }
+
     LaunchedEffect(state) {
-        if (state is AuthUiState.Success) {
-            onSuccess()
-            viewModel.resetState()
+        when (state) {
+            AuthUiState.SuccessUser -> {
+                onSuccess()
+                viewModel.resetState()
+            }
+            AuthUiState.SuccessAdmin -> {
+                onAdminSuccess()
+                viewModel.resetState()
+            }
+            else -> Unit
         }
     }
 
@@ -146,19 +155,23 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
                     singleLine = true,
-                    visualTransformation = if (passwordVisible)
+                    visualTransformation = if (passwordVisible) {
                         VisualTransformation.None
-                    else
-                        PasswordVisualTransformation(),
+                    } else {
+                        PasswordVisualTransformation()
+                    },
                     trailingIcon = {
-                        IconButton(onClick = {
-                            passwordVisible = !passwordVisible
-                        }) {
+                        IconButton(
+                            onClick = {
+                                passwordVisible = !passwordVisible
+                            }
+                        ) {
                             Icon(
-                                imageVector = if (passwordVisible)
+                                imageVector = if (passwordVisible) {
                                     Icons.Default.Visibility
-                                else
-                                    Icons.Default.VisibilityOff,
+                                } else {
+                                    Icons.Default.VisibilityOff
+                                },
                                 contentDescription = null
                             )
                         }
@@ -197,7 +210,9 @@ fun LoginScreen(
 
                 PrimaryAuthButton(
                     text = "Войти",
-                    onClick = { viewModel.login(email, password) }
+                    onClick = {
+                        viewModel.login(email, password)
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -267,12 +282,19 @@ fun LoginScreen(
 
                 when (val currentState = state) {
                     AuthUiState.Idle -> Unit
+
                     AuthUiState.Loading -> {
                         CircularProgressIndicator()
                     }
-                    AuthUiState.Success -> {
+
+                    AuthUiState.SuccessUser -> {
                         Text("Успешный вход")
                     }
+
+                    AuthUiState.SuccessAdmin -> {
+                        Text("Вход администратора выполнен")
+                    }
+
                     is AuthUiState.Error -> {
                         Text(
                             text = currentState.message,

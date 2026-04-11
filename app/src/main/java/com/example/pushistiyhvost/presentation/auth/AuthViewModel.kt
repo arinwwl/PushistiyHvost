@@ -4,10 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.pushistiyhvost.domain.usecase.LoginUseCase
 import com.example.pushistiyhvost.domain.usecase.RegisterUseCase
+import com.example.pushistiyhvost.domain.usecase.ResetPasswordUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import com.example.pushistiyhvost.domain.usecase.ResetPasswordUseCase
+
 class AuthViewModel(
     private val registerUseCase: RegisterUseCase,
     private val loginUseCase: LoginUseCase,
@@ -22,7 +23,7 @@ class AuthViewModel(
             _authState.value = AuthUiState.Loading
             val result = registerUseCase(email, password)
             _authState.value = if (result.isSuccess) {
-                AuthUiState.Success
+                AuthUiState.SuccessUser
             } else {
                 AuthUiState.Error(result.errorMessage ?: "Ошибка регистрации")
             }
@@ -33,10 +34,11 @@ class AuthViewModel(
         viewModelScope.launch {
             _authState.value = AuthUiState.Loading
             val result = loginUseCase(email, password)
-            _authState.value = if (result.isSuccess) {
-                AuthUiState.Success
-            } else {
-                AuthUiState.Error(result.errorMessage ?: "Ошибка входа")
+
+            _authState.value = when {
+                !result.isSuccess -> AuthUiState.Error(result.errorMessage ?: "Ошибка входа")
+                result.isAdmin -> AuthUiState.SuccessAdmin
+                else -> AuthUiState.SuccessUser
             }
         }
     }
@@ -51,7 +53,7 @@ class AuthViewModel(
             val result = resetPasswordUseCase(email)
 
             _authState.value = if (result.isSuccess) {
-                AuthUiState.Success
+                AuthUiState.SuccessUser
             } else {
                 AuthUiState.Error(result.errorMessage ?: "Ошибка восстановления")
             }

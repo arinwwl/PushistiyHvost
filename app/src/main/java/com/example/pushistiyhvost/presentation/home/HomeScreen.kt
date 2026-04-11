@@ -2,6 +2,7 @@ package com.example.pushistiyhvost.presentation.home
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,14 +43,28 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pushistiyhvost.data.repository.ProductRepositoryImpl
+import com.example.pushistiyhvost.data.repository.UserArticleRepositoryImpl
 import com.example.pushistiyhvost.domain.usecase.GetProductsUseCase
+import com.example.pushistiyhvost.domain.usecase.GetUserArticleByIdUseCase
+import com.example.pushistiyhvost.domain.usecase.GetUserArticlesUseCase
+import com.example.pushistiyhvost.presentation.articles.ArticlesViewModel
+import com.example.pushistiyhvost.presentation.articles.ArticlesViewModelFactory
 import com.example.pushistiyhvost.ui.components.ProductCard
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-
+import android.graphics.BitmapFactory
+import android.util.Base64
+import androidx.compose.foundation.Image
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import com.example.pushistiyhvost.data.repository.ProfileRepositoryImpl
+import com.example.pushistiyhvost.domain.usecase.GetProfileImageUseCase
 @Composable
 fun HomeScreen(
-    onProductClick: (String) -> Unit
+    onProductClick: (String) -> Unit,
+    onArticleClick: (String) -> Unit,
+    onCatalogClick: () -> Unit
 ) {
     val user = FirebaseAuth.getInstance().currentUser
     val userName = user?.email
@@ -65,17 +80,47 @@ fun HomeScreen(
     val categories = listOf("Все", "Кошки", "Собаки", "Птицы")
 
     val firestore = FirebaseFirestore.getInstance()
-    val repository = ProductRepositoryImpl(firestore)
-    val getProductsUseCase = GetProductsUseCase(repository)
+    val profileRepository = ProfileRepositoryImpl(firestore)
+    val getProfileImageUseCase = GetProfileImageUseCase(profileRepository)
+
+    var profileImageBase64 by remember { mutableStateOf<String?>(null) }
+
+    val productRepository = ProductRepositoryImpl(firestore)
+    val getProductsUseCase = GetProductsUseCase(productRepository)
 
     val homeViewModel: HomeViewModel = viewModel(
         factory = HomeViewModelFactory(getProductsUseCase)
     )
 
+    val articleRepository = UserArticleRepositoryImpl(firestore)
+    val articlesViewModel: ArticlesViewModel = viewModel(
+        factory = ArticlesViewModelFactory(
+            getUserArticlesUseCase = GetUserArticlesUseCase(articleRepository),
+            getUserArticleByIdUseCase = GetUserArticleByIdUseCase(articleRepository)
+        )
+    )
+
     val products by homeViewModel.products.collectAsState()
+    val articles by articlesViewModel.articles.collectAsState()
 
     LaunchedEffect(Unit) {
         homeViewModel.loadProducts()
+        articlesViewModel.loadArticles()
+
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
+        if (userId != null) {
+            profileImageBase64 = getProfileImageUseCase(userId)
+        }
+    }
+
+    val filteredProducts = products.filter { product ->
+        val matchesCategory = selectedCategory == "Все" ||
+                product.category.equals(selectedCategory, ignoreCase = true)
+
+        val matchesSearch = searchQuery.isBlank() ||
+                product.name.contains(searchQuery.trim(), ignoreCase = true)
+
+        matchesCategory && matchesSearch
     }
 
     Surface(
@@ -99,11 +144,32 @@ fun HomeScreen(
                     color = MaterialTheme.colorScheme.onBackground
                 )
 
-                Surface(
-                    modifier = Modifier.size(42.dp),
-                    shape = CircleShape,
-                    color = Color(0xFFD9D9D9)
-                ) {}
+                if (profileImageBase64 != null) {
+                    val bitmap = decodeBase64ToBitmap(profileImageBase64!!)
+
+                    if (bitmap != null) {
+                        Image(
+                            bitmap = bitmap.asImageBitmap(),
+                            contentDescription = "Аватар",
+                            modifier = Modifier
+                                .size(42.dp)
+                                .clip(CircleShape),
+                            contentScale = ContentScale.Crop
+                        )
+                    } else {
+                        Surface(
+                            modifier = Modifier.size(42.dp),
+                            shape = CircleShape,
+                            color = Color(0xFFD9D9D9)
+                        ) {}
+                    }
+                } else {
+                    Surface(
+                        modifier = Modifier.size(42.dp),
+                        shape = CircleShape,
+                        color = Color(0xFFD9D9D9)
+                    ) {}
+                }
             }
 
             Spacer(modifier = Modifier.height(18.dp))
@@ -133,7 +199,7 @@ fun HomeScreen(
                             onClick = {
                                 Toast.makeText(
                                     context,
-                                    "Фильтры добавим позже",
+                                    "Фильтры уже работают через поиск и категории",
                                     Toast.LENGTH_SHORT
                                 ).show()
                             }
@@ -213,7 +279,8 @@ fun HomeScreen(
 
                         Surface(
                             shape = RoundedCornerShape(14.dp),
-                            color = Color(0xFFF6C542)
+                            color = Color(0xFFF6C542),
+                            modifier = Modifier.clickable { onCatalogClick() }
                         ) {
                             Text(
                                 text = "Перейти в каталог",
@@ -238,20 +305,91 @@ fun HomeScreen(
             Spacer(modifier = Modifier.height(14.dp))
 
             Text(
-                text = "Товаров: ${products.size}",
+                text = "Товаров найдено: ${filteredProducts.size}",
                 color = Color.Gray
             )
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(products) { product ->
-                    ProductCard(
-                        product = product,
-                        onClick = { onProductClick(product.id) }
-                    )
+            if (filteredProducts.isEmpty()) {
+                Text(
+                    text = "Нет товаров по вашему запросу",
+                    color = Color(0xFF6C6880)
+                )
+            } else {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items(filteredProducts) { product ->
+                        ProductCard(
+                            product = product,
+                            onClick = { onProductClick(product.id) }
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Text(
+                text = "Полезные статьи",
+                fontWeight = FontWeight.Bold,
+                fontSize = 22.sp,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            if (articles.isEmpty()) {
+                Text(
+                    text = "Статьи пока не добавлены",
+                    color = Color(0xFF6C6880)
+                )
+            } else {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items(articles.take(3)) { article ->
+                        Surface(
+                            modifier = Modifier
+                                .width(240.dp)
+                                .clickable { onArticleClick(article.id) },
+                            shape = RoundedCornerShape(20.dp),
+                            color = Color.White,
+                            tonalElevation = 1.dp
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(16.dp),
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "Статья",
+                                    color = Color(0xFF6F4AE6),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 13.sp
+                                )
+
+                                Text(
+                                    text = article.title,
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 18.sp,
+                                    color = Color(0xFF2B2740)
+                                )
+
+                                Text(
+                                    text = article.text.take(100),
+                                    color = Color(0xFF6C6880)
+                                )
+                            }
+
+                        }
+                    }
                 }
             }
         }
     }
+
 }
+private fun decodeBase64ToBitmap(base64: String) =
+    try {
+        val decodedBytes = Base64.decode(base64, Base64.DEFAULT)
+        BitmapFactory.decodeByteArray(decodedBytes, 0, decodedBytes.size)
+    } catch (e: Exception) {
+        null
+    }

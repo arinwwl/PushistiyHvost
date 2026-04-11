@@ -9,5 +9,6 @@ data class Product(
     val description: String,
     val category: String,
     val characteristics: List<String>,
-    val reviews: List<String>
+    val reviews: List<String>,
+    val inStock: Boolean
 )

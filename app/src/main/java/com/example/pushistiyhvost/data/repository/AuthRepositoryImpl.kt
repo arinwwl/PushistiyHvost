@@ -9,6 +9,11 @@ class AuthRepositoryImpl(
     private val firebaseAuth: FirebaseAuth
 ) : AuthRepository {
 
+    companion object {
+        private const val ADMIN_EMAIL = "admin@mail.ru"
+        private const val ADMIN_PASSWORD = "123456"
+    }
+
     override suspend fun register(email: String, password: String): AuthResult {
         return try {
             firebaseAuth.createUserWithEmailAndPassword(email, password).await()
@@ -24,7 +29,13 @@ class AuthRepositoryImpl(
     override suspend fun login(email: String, password: String): AuthResult {
         return try {
             firebaseAuth.signInWithEmailAndPassword(email, password).await()
-            AuthResult(isSuccess = true)
+
+            val isAdmin = email.trim() == ADMIN_EMAIL && password == ADMIN_PASSWORD
+
+            AuthResult(
+                isSuccess = true,
+                isAdmin = isAdmin
+            )
         } catch (e: Exception) {
             AuthResult(
                 isSuccess = false,

@@ -8,13 +8,13 @@ import androidx.navigation.compose.rememberNavController
 import com.example.pushistiyhvost.data.repository.AuthRepositoryImpl
 import com.example.pushistiyhvost.domain.usecase.LoginUseCase
 import com.example.pushistiyhvost.domain.usecase.RegisterUseCase
+import com.example.pushistiyhvost.domain.usecase.ResetPasswordUseCase
 import com.example.pushistiyhvost.presentation.auth.AuthViewModel
 import com.example.pushistiyhvost.presentation.auth.AuthViewModelFactory
 import com.example.pushistiyhvost.presentation.auth.LoginScreen
 import com.example.pushistiyhvost.presentation.auth.RegisterScreen
 import com.example.pushistiyhvost.presentation.auth.WelcomeScreen
 import com.google.firebase.auth.FirebaseAuth
-import com.example.pushistiyhvost.domain.usecase.ResetPasswordUseCase
 
 @Composable
 fun AppNavigation() {
@@ -25,6 +25,7 @@ fun AppNavigation() {
     val registerUseCase = RegisterUseCase(repository)
     val loginUseCase = LoginUseCase(repository)
     val resetPasswordUseCase = ResetPasswordUseCase(repository)
+
     val authViewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(
             registerUseCase,
@@ -58,6 +59,11 @@ fun AppNavigation() {
                 viewModel = authViewModel,
                 onSuccess = {
                     navController.navigate(Screen.Main.route) {
+                        popUpTo(Screen.Welcome.route) { inclusive = true }
+                    }
+                },
+                onAdminSuccess = {
+                    navController.navigate(Screen.AdminMain.route) {
                         popUpTo(Screen.Welcome.route) { inclusive = true }
                     }
                 },
@@ -97,6 +103,17 @@ fun AppNavigation() {
                 onLoginRequired = {
                     navController.navigate(Screen.Welcome.route) {
                         popUpTo(Screen.Main.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.AdminMain.route) {
+            AdminContainerScreen(
+                onLogout = {
+                    firebaseAuth.signOut()
+                    navController.navigate(Screen.Welcome.route) {
+                        popUpTo(Screen.AdminMain.route) { inclusive = true }
                     }
                 }
             )

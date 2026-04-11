@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBackIosNew
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -36,14 +38,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.pushistiyhvost.R
 import com.example.pushistiyhvost.ui.components.PrimaryAuthButton
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
+
 @Composable
 fun RegisterScreen(
     viewModel: AuthViewModel,
@@ -55,12 +56,19 @@ fun RegisterScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var passwordVisible by remember { mutableStateOf(false) }
+
     val state by viewModel.authState.collectAsState()
 
     LaunchedEffect(state) {
-        if (state is AuthUiState.Success) {
-            onSuccess()
-            viewModel.resetState()
+        when (state) {
+            AuthUiState.SuccessUser -> {
+                onSuccess()
+                viewModel.resetState()
+            }
+            AuthUiState.SuccessAdmin -> {
+                viewModel.resetState()
+            }
+            else -> Unit
         }
     }
 
@@ -149,7 +157,28 @@ fun RegisterScreen(
                     label = { Text("Пароль") },
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(16.dp),
-                    singleLine = true
+                    singleLine = true,
+                    visualTransformation = if (passwordVisible) {
+                        VisualTransformation.None
+                    } else {
+                        PasswordVisualTransformation()
+                    },
+                    trailingIcon = {
+                        IconButton(
+                            onClick = {
+                                passwordVisible = !passwordVisible
+                            }
+                        ) {
+                            Icon(
+                                imageVector = if (passwordVisible) {
+                                    Icons.Default.Visibility
+                                } else {
+                                    Icons.Default.VisibilityOff
+                                },
+                                contentDescription = null
+                            )
+                        }
+                    }
                 )
 
                 Spacer(modifier = Modifier.height(20.dp))
@@ -184,12 +213,19 @@ fun RegisterScreen(
 
                 when (val currentState = state) {
                     AuthUiState.Idle -> Unit
+
                     AuthUiState.Loading -> {
                         CircularProgressIndicator()
                     }
-                    AuthUiState.Success -> {
+
+                    AuthUiState.SuccessUser -> {
                         Text("Успешная регистрация")
                     }
+
+                    AuthUiState.SuccessAdmin -> {
+                        Text("Успешный вход")
+                    }
+
                     is AuthUiState.Error -> {
                         Text(
                             text = currentState.message,

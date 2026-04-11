@@ -12,6 +12,7 @@ fun ProductDto.toProduct(): Product {
         description = description,
         category = category,
         characteristics = characteristics,
-        reviews = reviews
+        reviews = reviews,
+        inStock = inStock
     )
 }

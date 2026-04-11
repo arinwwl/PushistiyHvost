@@ -17,13 +17,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.pushistiyhvost.data.repository.AuthRepositoryImpl
 import com.example.pushistiyhvost.domain.usecase.LoginUseCase
 import com.example.pushistiyhvost.domain.usecase.RegisterUseCase
-import com.google.firebase.auth.FirebaseAuth
 import com.example.pushistiyhvost.domain.usecase.ResetPasswordUseCase
+import com.google.firebase.auth.FirebaseAuth
 
 @Composable
 fun AuthScreen() {
@@ -32,6 +33,7 @@ fun AuthScreen() {
     val registerUseCase = RegisterUseCase(repository)
     val loginUseCase = LoginUseCase(repository)
     val resetPasswordUseCase = ResetPasswordUseCase(repository)
+
     val viewModel: AuthViewModel = viewModel(
         factory = AuthViewModelFactory(
             registerUseCase,
@@ -67,13 +69,17 @@ fun AuthScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = { viewModel.register(email, password) }) {
+        Button(
+            onClick = { viewModel.register(email, password) }
+        ) {
             Text("Регистрация")
         }
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        Button(onClick = { viewModel.login(email, password) }) {
+        Button(
+            onClick = { viewModel.login(email, password) }
+        ) {
             Text("Вход")
         }
 
@@ -81,9 +87,25 @@ fun AuthScreen() {
 
         when (val currentState = state) {
             AuthUiState.Idle -> Unit
-            AuthUiState.Loading -> CircularProgressIndicator()
-            AuthUiState.Success -> Text("Успех")
-            is AuthUiState.Error -> Text(currentState.message)
+
+            AuthUiState.Loading -> {
+                CircularProgressIndicator()
+            }
+
+            AuthUiState.SuccessUser -> {
+                Text("Успешный вход пользователя")
+            }
+
+            AuthUiState.SuccessAdmin -> {
+                Text("Успешный вход администратора")
+            }
+
+            is AuthUiState.Error -> {
+                Text(
+                    text = currentState.message,
+                    color = Color.Red
+                )
+            }
         }
     }
 }
