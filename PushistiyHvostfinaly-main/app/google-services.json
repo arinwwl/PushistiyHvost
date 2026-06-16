@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "206829555788",
+    "project_id": "pushistiyhvost-f562f",
+    "storage_bucket": "pushistiyhvost-f562f.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:206829555788:android:e247f93667c257352424e9",
+        "android_client_info": {
+          "package_name": "com.example.pushistiyhvost"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDr17glCkjG5lK2eLLngtW4egVVj5tUirc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
